@@ -161,11 +161,13 @@
       modalFade.append(modalDialog);
       container.append(modalFade);
       
+      
+
        addContacts.addEventListener('click', (e) => {
          e.preventDefault();
          let numberContacts = document.getElementsByClassName('contact-group');
          if (numberContacts.length < 9) {
-             let newContact = createContactsItem();
+            let newContact = createContactsItem();
              contactsList.append(newContact.contactsItem)
             return 
          } else return;
@@ -184,7 +186,7 @@
 
     // Создаем и возвращаем форму добавления контактов клиента
      function createContactsItem () {
-         const container = document.querySelector('.contacts-list');
+        // const container = document.querySelector('.contacts-list');
         const contactsItem = document.createElement('li');
         const contactSelect = document.createElement('select');
         const phoneOption = document.createElement('option');
@@ -224,21 +226,27 @@
          contactsItem.append(contactSelect);
          contactsItem.append(contactInput);
          contactsItem.append(clearContactBtn);
-          container.append(contactsItem);
+        // container.append(contactsItem);
 
          switch (contactSelect.value) {
              case('phone'):
-             contactInput.setAttribute('type', 'tel')
+             contactInput.setAttribute('type', 'tel');
+             contactInput.setAttribute('id', 'phone');
+             contactSelect.setAttribute('id', 'phone-select');
              break;
          }
 
          contactSelect.addEventListener('change', ()=> {
              switch (contactSelect.value) {
                  case('phone'):
-                 contactInput.setAttribute('type', 'tel')
+                 contactInput.setAttribute('type', 'tel');
+                 contactInput.setAttribute('id', 'phone');
+                 contactSelect.setAttribute('id', 'phone-select');
                  break;
                  case('mail'):
-                 contactInput.setAttribute('type', 'email')
+                 contactInput.setAttribute('type', 'email');
+                 contactInput.setAttribute('id', 'mail');
+                 contactSelect.setAttribute('id', 'mail-select');
                  break;
                  case('fb' || 'vk' || 'other'):
                  contactInput.setAttribute('type', 'text')
@@ -261,7 +269,6 @@
         const appTitle = createAppTitle(title);
         const addClientBtn = createAddButton();
         const modalAddClient = createAddClientForm(container, 'Новый клиент');
-        // let newContactDate = createContactsItem();
         createTableHead();
         createClientTable();
         createAddClientForm(container, 'Новый клиент');
@@ -270,14 +277,16 @@
             e.preventDefault();
             if (!modalAddClient.nameInput.value || !modalAddClient.lastNameInput.value)
                  return;
-            const response = await fetch('http:localhost:3000/api/clients', {
+
+            const response = await fetch('http://localhost:3000/api/clients', {
                 method: 'POST',
                 body: JSON.stringify(
                     {
                         name: modalAddClient.nameInput.value.trim(),
                         lastName: modalAddClient.sureNameInput.value.trim(),
                         surname: modalAddClient.lastNameInput.value.trim(),
-                    
+                        // contacts: [document.getElementById('phone-select').value, document.getElementById('phone').value]
+                        
                     }
                 ),
                 headers:
@@ -285,8 +294,9 @@
                     'Content-Type': 'application/json',
                 },
             });
-            const clientItem = await response.json();
-            console.log(clientItem)
+            // const clientItem = await response.json();
+            createClientTable ()
+            
         }); 
         container.prepend(appTitle);
         container.prepend(queryForm.formWrapper);
