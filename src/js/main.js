@@ -27,7 +27,7 @@
     }
 
     function createAppTitle (title) {
-        const appTitle = document.createElement('h2');
+        const appTitle = document.createElement('h2')
         appTitle.textContent = title;
         appTitle.classList.add('app-title', 'mb-3');
         return appTitle;
