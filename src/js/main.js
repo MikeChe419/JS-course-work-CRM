@@ -1,4 +1,5 @@
 (() => {
+    // Создаем форму поиска
     function createQueryForm () {
         const form = document.createElement('form');
         const link = document.createElement('a');
@@ -25,7 +26,7 @@
             link,
         }
     }
-
+    // Создаем и возвращаем заголовок приложения
     function createAppTitle (title) {
         const appTitle = document.createElement('h2')
         appTitle.textContent = title;
@@ -33,6 +34,7 @@
         return appTitle;
     }
 
+    //Создаем и возвращаем заголовок таблицы
     function createTableHead () {
         let tableHead = document.getElementById('heading-table');
         let headRow =`<tbody>
@@ -51,6 +53,7 @@
         }
      }
 
+    //Создаем и возвращаем кнопку добавления клиента
     function createAddButton() {
         const addBtn = document.createElement('button');
         const btnRow = document.createElement('div');
@@ -69,6 +72,7 @@
         } 
     }
 
+    //Создаем и возвращаем таблицу клиентов
     async function createClientTable ()  {
         const table = document.getElementById('client-table');
         table.innerHTML ='';
@@ -90,6 +94,7 @@
         }
       }
 
+      // Создаем и возвращаем форму добавления(в перспиктивее и изменения) клиента
     function createAddClientForm(container, title) {
       const modalFade = document.createElement('div');
       const modalDialog = document.createElement('div');
@@ -177,6 +182,7 @@
       }
     }
 
+    // Создаем и возвращаем форму добавления контактов клиента
      function createContactsItem () {
          const container = document.querySelector('.contacts-list');
         const contactsItem = document.createElement('li');
@@ -249,7 +255,8 @@
      }
 
     const queryForm = createQueryForm();
-    
+
+    // Создаем функцию приложения
     function createAppCRM (container, title="Клиенты") {
         const appTitle = createAppTitle(title);
         const addClientBtn = createAddButton();
