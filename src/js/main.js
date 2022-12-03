@@ -1,6 +1,7 @@
 (() => {
     const URI = 'http://localhost:3000/api/clients';
     let objClient = {};
+    let markupClient = {};
     // Создаем форму поиска
     function createQueryForm () {
         const form = document.createElement('form');
@@ -90,54 +91,104 @@
         return str.slice(11, 16);
     }
 
-    //Создаем и возвращаем таблицу клиентов
-    async function createClientTable()  {
-        const table = document.getElementById('client-table');
+    //Создаем контейнер тела таблицы 
+     async function createTableBody() {
+        const tableWrapper = document.createElement('div');
+        const table = document.createElement('table');
+        const tbody = document.createElement('tbody');
         const response = await fetch(URI);
         const clientsList = await response.json();
-
-        table.innerHTML ='';
-        for (let i=0; i < clientsList.length; i++) {
-            const createTime = clientsList[i].createdAt;
-            const updateTime = clientsList[i].updatedAt;
-            let contactList = {};
-            const ul = document.createElement('ul');
-            ul.classList.add('table_contacts-list');
-            const actions = createEditWrapper();
-
-            if ( typeof clientsList[i].lastname === 'undefined') {
-                clientsList[i].lastname = '';
-            };
-            
-            if (typeof clientsList[i].contacts !== 'undefined') {
-                contactList = clientsList[i].contacts.map(item => {
-                    const li = document.createElement('li');
-                    li.textContent = item.value;
-                    return li
-                });
-                contactList.forEach(item => ul.append(item));
-            };
-
-            const row = `<tr class='row, client__row'>
-            <td>${clientsList[i].id}</td>
-                <td class='client__item-cell' id ="fullname">${clientsList[i].name + ' ' + clientsList[i].lastName + ' ' + clientsList[i].surname}</td>
-                <td class='client__item-cell' id ="create-time"><span class='day'>${formatDate(createTime)}</span><span class='time'> ${formatTime(createTime)}</span></td>
-                <td class='client__item-cell' id ="last-Edits"><span class='day'>${formatDate(updateTime)}</span><span class='time'> ${formatTime(updateTime)}</span></td>
-                <td class='client__item-cell' id ='contacts'></td>
-                <td class='client__item-cell' id ='actions'></td>
-            </tr>` 
-           table.innerHTML += row;
-           document.querySelectorAll('#contacts').forEach(td=> td.appendChild(ul));
-           document.querySelectorAll('#actions').forEach(td=> td.appendChild(actions.wrapper));
-
-           actions.delBtn.addEventListener('click', () => {
-                objClient = clientsList[i]
-            }) 
-            actions.editBtn.addEventListener('click', () => {
-                objClient = clientsList[i]
-            }) 
+        clientsList.forEach(client => tbody.append(createTableRow(client)))
+     
+        tableWrapper.classList.add('table-body');
+        tbody.classList.add('clients-tbody')
+        table.classList.add('client-table');
+        table.appendChild(tbody)
+        tableWrapper.append(table);
+    
+        return {
+          tableWrapper,
+          table,
+          tbody
         }
-    }
+      }
+
+    function createTableRow(client) {
+        const tr = document.createElement('tr');
+        const tdId = document.createElement('td');
+        const tdFullname = document.createElement('td');
+        const tdCreateDate = document.createElement('td');
+        const createDay = document.createElement('span');
+        const createTime = document.createElement('span');
+        const updateDay = document.createElement('span');
+        const updateTime = document.createElement('span');
+        const tdUpdateDate = document.createElement('td');
+        const tdContacts = document.createElement('td');
+        const tdActions = document.createElement('td');
+        const actions = createEditWrapper();
+        const contactsUl = document.createElement('ul');
+        let contactList = {};
+        const create = client.createdAt;
+        const update = client.updatedAt;
+
+        if ( typeof client.lastname === 'undefined') {
+            client.lastname = '';
+        };
+
+        if (typeof client.contacts !== 'undefined') {
+            contactList = client.contacts.map(item => {
+                const li = document.createElement('li');
+                li.textContent = item.value;
+                return li
+            });
+            contactList.forEach(item => contactsUl.append(item));
+        };
+
+        tr.classList.add('row', 'client__row');
+        tdId.classList.add('client__item-cell');
+        tdFullname.classList.add('client__item-cell');
+        tdCreateDate.classList.add('client__item-cell');
+        tdUpdateDate.classList.add('client__item-cell');
+        tdContacts.classList.add('client__item-cell');
+        tdActions.classList.add('client__item-cell');
+        tdId.setAttribute('id', 'td-id');
+        tdFullname.setAttribute('id', 'td-fullname');
+        tdCreateDate.setAttribute('id', 'td-create-date');
+        tdUpdateDate.setAttribute('id', 'td-up-date');
+        tdContacts.setAttribute('id', 'td-contacts');
+        tdActions.setAttribute('id', 'td-actions');
+        tdActions.append(actions.wrapper)
+        createDay.classList.add('day');
+        createTime.classList.add('time');
+        updateDay.classList.add('day');
+        updateTime.classList.add('time');
+        tdId.innerText = client.id;
+        tdFullname.innerText = `${client.name + ' ' + client.lastName + ' ' + client.surname}`
+        createDay.innerText = `${formatDate(create)}`
+        updateDay.innerText = `${formatDate(update)}`
+        createTime.innerText = `${formatTime(create)}`
+        updateTime.innerText = `${formatTime(update)}`
+        contactsUl.classList.add('table_contacts-list');
+    
+        tdCreateDate.append(createDay);
+        tdCreateDate.append(createTime);
+        tdUpdateDate.append(updateDay);
+        tdUpdateDate.append(updateTime);
+        tdContacts.append(contactsUl);
+        tr.append(tdId);
+        tr.append(tdFullname);
+        tr.append(tdCreateDate);
+        tr.append(tdUpdateDate);
+        tr.append(tdContacts);
+        tr.append(tdActions);
+
+        actions.delBtn.addEventListener("click", () => {
+            objClient = client
+            markupClient = tr
+        })
+
+        return tr
+      }
 
     //Создаем и возвращаем кнопку добавления клиента
     function createAddButton() {
@@ -157,6 +208,7 @@
             addBtn,
         } 
     }
+    const addClientBtn = createAddButton();
 
     //Создаем шаблон модального окна с использованием bootstrap
     function createModalTemp (container, title) {
@@ -196,13 +248,19 @@
         modalDialog.append(modalContent);
         container.append(modalDialog);
 
+        closeBtn.addEventListener('click', () => {
+            let contactsList = document.querySelectorAll('.contact-group');
+            if (contactsList) {
+                contactsList.forEach(el => el.remove())  
+            }
+        })
+
         return {
             modalDialog,
             modalHeader,
             modalFooter,
             modalBody,
-            modalTitle,
-            closeBtn
+            modalTitle
         }
     }
     
@@ -312,7 +370,7 @@
         form.setAttribute('style', 'display: flex; flex-direction: column; align-items: center');
         contactWrapper.classList.add('mb-3', 'modal__contact-wrapper');
         contactsList.classList.add('list-group', 'contacts-list');
-        saveBtn.setAttribute('data-dismiss', 'modal');
+        // saveBtn.setAttribute('data-dismiss', 'modal');
 
         contactWrapper.append(contactsList);
         contactWrapper.append(addContacts);
@@ -332,6 +390,67 @@
             addContacts,
             contactsList,
         }
+    }
+
+    // Создаем и возвращаем модальное  окно добавления клиента
+    function createModalAddClient(container) {
+        const modalFade = document.createElement('div');
+        const modalAdd = createModalTemp (modalFade, 'Новый клиент');
+        const modalForm =  createClientFormTemp(modalAdd.modalBody)
+    
+        modalFade.classList.add('modal', 'fade');
+        modalFade.setAttribute('id', 'staticBackdrop');
+        modalFade.setAttribute('data-backdrop', 'static');
+        modalFade.setAttribute('aria-labelledby', 'staticBackdropLabel');
+        container.append(modalFade);
+
+        //Кнопка добавления контактов
+        modalForm.addContacts.addEventListener('click', (e) => {
+            e.preventDefault();
+            createContactsItem(modalForm.contactsList)
+            let numberContacts = document.getElementsByClassName('contact-group');
+            if (numberContacts.length >=9) return;
+        })
+
+        addClientBtn.addBtn.addEventListener('click', () => {
+            modalForm.saveBtn.removeAttribute('data-dismiss')
+        })
+
+        //Кнопка сохранения и отправки данных о кленте на сервер
+        modalForm.saveBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            if (!modalForm.nameInput.value || !modalForm.lastNameInput.value) return;
+            modalForm.saveBtn.setAttribute('data-dismiss', 'modal')
+            const contactDataArr = document.querySelectorAll('.contact-input');
+            let contactArr = [];
+            if (contactDataArr)
+                contactDataArr.forEach(input => contactArr.push({
+                    type: input.type,
+                    value: input.value
+                }))
+
+            const response = await fetch(URI, {
+                method: 'POST',
+                body: JSON.stringify(
+                    {
+                        name: modalForm.nameInput.value.trim(),
+                        lastName: modalForm.sureNameInput.value.trim(),
+                        surname: modalForm.lastNameInput.value.trim(),
+                        contacts: contactArr,
+                    },
+                ),
+                headers:
+                {
+                    'Content-Type': 'application/json',
+                },
+            });
+            const client = await response.json();
+            document.querySelector('.clients-tbody').append(createTableRow(client));
+            modalForm.nameInput.value = "";
+            modalForm.sureNameInput.value = "";
+            modalForm.lastNameInput.value= "";
+            document.querySelectorAll('.contact-group').forEach(item => item.remove());
+        }); 
     }
 
     //Создаем и возвращаем модальное окно удаления клиента
@@ -373,94 +492,29 @@
         modal.setAttribute('data-backdrop', 'static');
         modal.setAttribute('aria-labelledby', 'staticBackdropLabel');
         container.append(modal);
-        createClientTable()
-        console.log(objClient)
-        // modalEditForm.nameInput = objClient.name
-
-        modalEditForm.saveBtn.addEventListener('click', () => {
-            // // 
-            // console.log(objClient)
-        })      
-    }
-
-    // Создаем и возвращаем модальное  окно добавления клиента
-    function createModalAddClient(container) {
-        const modalFade = document.createElement('div');
-        const modalAdd = createModalTemp (modalFade, 'Новый клиент');
-        const modalForm =  createClientFormTemp(modalAdd.modalBody)
-    
-        modalFade.classList.add('modal', 'fade');
-        modalFade.setAttribute('id', 'staticBackdrop');
-        modalFade.setAttribute('data-backdrop', 'static');
-        modalFade.setAttribute('aria-labelledby', 'staticBackdropLabel');
-        container.append(modalFade);
-
-        //Кнопка добавления контактов
-        modalForm.addContacts.addEventListener('click', (e, contact = createContactsItem(modalForm.contactsList)) => {
-            e.preventDefault();
-            let numberContacts = document.getElementsByClassName('contact-group');
-            if (numberContacts.length >=9) return;
-        })
-
-        //Кнопка сохранения и отправки данных о кленте на сервер
-        modalForm.saveBtn.addEventListener('click', async (e) => {
-            e.preventDefault();
-            if (!modalForm.nameInput.value || !modalForm.lastNameInput.value) return;
-
-            const contactDataArr = document.querySelectorAll('.contact-input');
-            let contactArr = [];
-            if (contactDataArr)
-                contactDataArr.forEach(input => contactArr.push({
-                    type: input.type,
-                    value: input.value
-                }))
-
-            const response = await fetch(URI, {
-                method: 'POST',
-                body: JSON.stringify(
-                    {
-                        name: modalForm.nameInput.value.trim(),
-                        lastName: modalForm.sureNameInput.value.trim(),
-                        surname: modalForm.lastNameInput.value.trim(),
-                        contacts: contactArr,
-                    },
-                ),
-                headers:
-                {
-                    'Content-Type': 'application/json',
-                },
-            });
-            createClientTable();
-            modalForm.nameInput.value = "";
-            modalForm.sureNameInput.value = "";
-            modalForm.lastNameInput.value= "";
-            document.querySelectorAll('.contact-group').forEach(item => item.remove());
-        }); 
-
-        return modalForm
     }
 
     // Создаем функцию приложения
-    function createAppCRM (container, title="Клиенты") {
-        const modalAddClient = createModalAddClient(container);
-        const modalDelClient = createModalDelClient(container);
-        const modalEditClient = createModalEditClient(container)
+    async function createAppCRM (container, title="Клиенты") {
+        
         const queryForm = createQueryForm();
         const appTitle = createAppTitle(title);
-        const addClientBtn = createAddButton();
-
+        const clientTable = await createTableBody();
+        createModalAddClient(container);
+        const modalDelClient = createModalDelClient(container);
+        const modalEditClient = createModalEditClient(container);
         createTableHead();
-        createClientTable();
 
         container.prepend(appTitle);
         container.prepend(queryForm.formWrapper);
+        container.append(clientTable.tableWrapper)
         container.append(addClientBtn.btnRow);
 
         modalDelClient.deleteBtn.addEventListener('click', async () => {
+            markupClient.remove()
             const response = await fetch(`${URI}/${objClient.id}`, {
-                method: 'DELETE',
+                 method: 'DELETE',
             });
-            createClientTable()
         })
     }
 
