@@ -68,8 +68,7 @@
         editBtn.textContent = 'Изменить';
         delBtn.classList.add('btn', 'btn-link', 'del-client-btn');
         delBtn.setAttribute('data-target', '#delModal');
-        delBtn.setAttribute('data-toggle', 'modal');   
-        
+        delBtn.setAttribute('data-toggle', 'modal');    
         delBtn.textContent = 'Удалить';
 
         wrapper.append(editBtn);
@@ -162,7 +161,7 @@
         createTime.classList.add('time');
         updateDay.classList.add('day');
         updateTime.classList.add('time');
-        tdId.innerText = client.id;
+        tdId.innerText = client.id.slice(-6);
         tdFullname.innerText = `${client.name + ' ' + client.lastName + ' ' + client.surname}`
         createDay.innerText = `${formatDate(create)}`
         updateDay.innerText = `${formatDate(update)}`
@@ -182,10 +181,15 @@
         tr.append(tdContacts);
         tr.append(tdActions);
 
-        actions.delBtn.addEventListener("click", () => {
-            objClient = client
-            markupClient = tr
-        })
+         actions.delBtn.addEventListener("click", () => {
+             objClient = client
+             markupClient = tr
+         })
+        actions.editBtn.addEventListener("click", async () => {
+                markupClient = tr;
+                await EditClientData(client)
+                
+         })
 
         return tr
       }
@@ -203,6 +207,7 @@
         addBtn.textContent = ' Добавить пользователя';
         addBtn.prepend(i)
         btnRow.append(addBtn);
+
         return {
             btnRow,
             addBtn,
@@ -231,7 +236,7 @@
         headerCloseBtn.setAttribute('type', 'button');
         headerCloseBtn.setAttribute('data-dismiss', 'modal');
         headerCloseBtn.setAttribute('aria-label', 'Close');
-        headerCloseBtn.classList.add('close');
+        headerCloseBtn.classList.add('close', 'header__close-btn');
         span.innerHTML = '&times';
         modalTitle.textContent = title;
         headerCloseBtn.append(span);
@@ -248,19 +253,14 @@
         modalDialog.append(modalContent);
         container.append(modalDialog);
 
-        closeBtn.addEventListener('click', () => {
-            let contactsList = document.querySelectorAll('.contact-group');
-            if (contactsList) {
-                contactsList.forEach(el => el.remove())  
-            }
-        })
-
         return {
             modalDialog,
             modalHeader,
             modalFooter,
             modalBody,
-            modalTitle
+            modalTitle,
+            closeBtn,
+            headerCloseBtn,
         }
     }
     
@@ -279,6 +279,9 @@
 
         contactSelect.setAttribute('style', 'width: 125px;');
         contactInput.setAttribute('style', 'width: 240px;');
+        contactInput.setAttribute('type', 'tel');
+        contactInput.setAttribute('id', 'phone');
+        contactSelect.setAttribute('id', 'phone-select');
         contactSelect.classList.add('form-control', 'contact-form', 'contact-select');
         contactInput.classList.add('form-control', 'contact-form', 'contact-input');
         contactsItem.classList.add('contact-group', 'mb-3');
@@ -306,14 +309,7 @@
         contactsItem.append(contactInput);
         contactsItem.append(clearContactBtn);
         container.append(contactsItem);
-
-        switch (contactSelect.value) {
-            case('phone'):
-            contactInput.setAttribute('type', 'tel');
-            contactInput.setAttribute('id', 'phone');
-            contactSelect.setAttribute('id', 'phone-select');
-            break;
-        }
+         
         contactSelect.addEventListener('change', ()=> {
             switch (contactSelect.value) {
                 case('phone'):
@@ -326,8 +322,20 @@
                     contactInput.setAttribute('id', 'mail');
                     contactSelect.setAttribute('id', 'mail-select');
                 break;
-                case('fb' || 'vk' || 'other'):
-                    contactInput.setAttribute('type', 'text')
+                case('fb'):
+                    contactInput.setAttribute('type', 'text');
+                    contactInput.setAttribute('id', 'fb');
+                    contactSelect.setAttribute('id', 'fb-select');
+                break;
+                case('vk'):
+                    contactInput.setAttribute('type', 'text');
+                    contactInput.setAttribute('id', 'vk');
+                    contactSelect.setAttribute('id', 'vk-select');
+                break;
+                case('other'):
+                    contactInput.setAttribute('type', 'text');
+                    contactInput.setAttribute('id', 'other');
+                    contactSelect.setAttribute('id', 'other-select');
                 break;
             }
         })
@@ -379,7 +387,15 @@
         form.append(sureNameInput);
         form.append(contactWrapper);
         form.append(saveBtn);
-        container.append(form)
+        container.append(form);
+
+         //Кнопка добавления контактов
+        addContacts.addEventListener('click', (e) => {
+            e.preventDefault();
+            createContactsItem(contactsList)
+            let numberContacts = document.getElementsByClassName('contact-group');
+            if (numberContacts.length >=9) return;
+        })
 
         return {
             saveBtn,
@@ -390,6 +406,28 @@
             addContacts,
             contactsList,
         }
+    }
+
+    function createContactsArray() {
+        const contactDataArr = document.querySelectorAll('.contact-input');
+        let contactArr = [];
+        if (contactDataArr)
+            contactDataArr.forEach(input => contactArr.push({
+                type: input.id,
+                value: input.value
+            }))
+            return contactArr
+    }
+
+     function clearModalForm() {
+        let contactsList = document.querySelectorAll('.contact-group');
+        if (contactsList.length > 0) 
+            contactsList.forEach(el => el.remove())    
+        document.querySelectorAll('.modal-input').forEach(input => input.value = "")
+    }
+
+    function removeContactsList() {
+        document.querySelectorAll('.contact-group').forEach(item => item.remove());
     }
 
     // Создаем и возвращаем модальное  окно добавления клиента
@@ -404,12 +442,11 @@
         modalFade.setAttribute('aria-labelledby', 'staticBackdropLabel');
         container.append(modalFade);
 
-        //Кнопка добавления контактов
-        modalForm.addContacts.addEventListener('click', (e) => {
-            e.preventDefault();
-            createContactsItem(modalForm.contactsList)
-            let numberContacts = document.getElementsByClassName('contact-group');
-            if (numberContacts.length >=9) return;
+        modalAdd.headerCloseBtn.addEventListener('click', () => {
+            clearModalForm()
+        })
+        modalAdd.closeBtn.addEventListener('click', () => {
+            clearModalForm()
         })
 
         addClientBtn.addBtn.addEventListener('click', () => {
@@ -420,15 +457,8 @@
         modalForm.saveBtn.addEventListener('click', async (e) => {
             e.preventDefault();
             if (!modalForm.nameInput.value || !modalForm.lastNameInput.value) return;
-            modalForm.saveBtn.setAttribute('data-dismiss', 'modal')
-            const contactDataArr = document.querySelectorAll('.contact-input');
-            let contactArr = [];
-            if (contactDataArr)
-                contactDataArr.forEach(input => contactArr.push({
-                    type: input.type,
-                    value: input.value
-                }))
-
+            modalForm.saveBtn.setAttribute('data-dismiss', 'modal');
+            
             const response = await fetch(URI, {
                 method: 'POST',
                 body: JSON.stringify(
@@ -436,7 +466,7 @@
                         name: modalForm.nameInput.value.trim(),
                         lastName: modalForm.sureNameInput.value.trim(),
                         surname: modalForm.lastNameInput.value.trim(),
-                        contacts: contactArr,
+                        contacts: createContactsArray(),
                     },
                 ),
                 headers:
@@ -449,7 +479,7 @@
             modalForm.nameInput.value = "";
             modalForm.sureNameInput.value = "";
             modalForm.lastNameInput.value= "";
-            document.querySelectorAll('.contact-group').forEach(item => item.remove());
+            removeContactsList();
         }); 
     }
 
@@ -471,7 +501,7 @@
         deleteBtn.textContent = 'Удалить';
         deleteBtn.setAttribute('data-dismiss', 'modal');
         modalDel.modalBody.classList.add('modal__del-body');
-        modalDel.modalTitle.classList.add('modal__del-title')
+        modalDel.modalTitle.classList.add('modal__del-title');
         modalDel.modalBody.append(p);
         modalDel.modalBody.append(deleteBtn);
         container.append(modal);
@@ -482,27 +512,114 @@
     }
 
     // Создаем и возвращаем модальное окно изменения данных клиента
-    function createModalEditClient(container) {
+     function createModalEditClient(container) {
         const modal = document.createElement('div');
         const modalEdit = createModalTemp (modal, 'Изменить данные');
-        const modalEditForm =  createClientFormTemp(modalEdit.modalBody);
-
+        const modalEditForm = createClientFormTemp(modalEdit.modalBody);
+        const spanId = document.createElement('span');
         modal.classList.add('modal', 'fade');
         modal.setAttribute('id', 'editModal');
         modal.setAttribute('data-backdrop', 'static');
         modal.setAttribute('aria-labelledby', 'staticBackdropLabel');
+        spanId.classList.add('modal__edit-span-id');
+        modalEdit.modalHeader.append(spanId);
         container.append(modal);
-    }
+        
+        return {
+            modalEdit,
+            modalEditForm,
+            spanId
+        }
+     }
 
+    const modalEditClient = createModalEditClient(document.getElementById('container'))
+
+    async function EditClientData (client) {
+        let response = await fetch(`${URI}/${client.id}`);
+        let item = await response.json();
+        console.log(item);
+        modalEditClient.spanId.textContent = `ID: ${item.id.slice(-6)}`;
+        modalEditClient.modalEditForm.nameInput.value = item.name;
+        modalEditClient.modalEditForm.lastNameInput.value = item.surname;
+        modalEditClient.modalEditForm.sureNameInput.value = item.lastName;
+          if (client.contacts.length > 0) {
+              client.contacts.forEach(el => {
+                  let contactItem = createContactsItem(modalEditClient.modalEditForm.contactsList);
+                  contactItem.contactInput.value = el.value;
+                  switch (el.type) {
+                      case('phone'):
+                          contactItem.contactSelect.value = 'phone'
+                      break;
+                      case('mail'):
+                          contactItem.contactSelect.value = 'mail';
+                          contactItem.contactSelect.id = 'mail-select';
+                          contactItem.contactInput.type = 'email';
+                          contactItem.contactInput.id = 'mail'; 
+                      break;
+                      case('fb'):
+                          contactItem.contactSelect.value = 'fb';
+                          contactItem.contactSelect.id = 'fb-select';
+                          contactItem.contactInput.type = 'text';
+                          contactItem.contactInput.id = 'fb'; 
+                      break;
+                      case('vk'):
+                          contactItem.contactSelect.value = 'vk';
+                          contactItem.contactSelect.id = 'vk-select';
+                          contactItem.contactInput.type = 'text';
+                          contactItem.contactInput.id = 'vk'; 
+                      break;
+                      case('other'):
+                          contactItem.contactSelect.value = 'other';
+                          contactItem.contactSelect.id = 'other-select';
+                          contactItem.contactInput.type = 'text';
+                          contactItem.contactInput.id = 'other'; 
+                      break;
+                  }
+              })
+          }
+          console.log(markupClient)
+          modalEditClient.modalEdit.headerCloseBtn.addEventListener('click', ()=>{
+            removeContactsList();
+            item = {}
+          })
+
+          modalEditClient.modalEdit.closeBtn.addEventListener('click', ()=>{
+            removeContactsList();
+            item = {}
+          })
+         modalEditClient.modalEditForm.saveBtn.addEventListener('click', async(e) => {
+             e.preventDefault();
+             markupClient.remove();
+             modalEditClient.modalEditForm.saveBtn.setAttribute('data-dismiss', 'modal');
+             console.log(item.id)
+             const responce = await fetch(`${URI}/${item.id}`, {
+                 method: 'PATCH',
+                 body: JSON.stringify(
+                     {
+                         name: modalEditClient.modalEditForm.nameInput.value.trim(),
+                         lastName: modalEditClient.modalEditForm.sureNameInput.value.trim(),
+                         surname: modalEditClient.modalEditForm.lastNameInput.value.trim(),
+                         contacts: createContactsArray()
+                     },
+                 ),
+                 headers:
+                 {
+                     'Content-Type': 'application/json',
+                 },
+            })
+            const updateClient = await responce.json();
+            document.querySelector('.clients-tbody').append(createTableRow(updateClient));
+            console.log(updateClient)
+         })
+     }
+        
     // Создаем функцию приложения
     async function createAppCRM (container, title="Клиенты") {
-        
         const queryForm = createQueryForm();
         const appTitle = createAppTitle(title);
         const clientTable = await createTableBody();
         createModalAddClient(container);
         const modalDelClient = createModalDelClient(container);
-        const modalEditClient = createModalEditClient(container);
         createTableHead();
 
         container.prepend(appTitle);
