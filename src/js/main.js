@@ -181,14 +181,17 @@
         tr.append(tdContacts);
         tr.append(tdActions);
 
-         actions.delBtn.addEventListener("click", () => {
+         actions.delBtn.addEventListener("click", (e) => {
              objClient = client
              markupClient = tr
+             
          })
         actions.editBtn.addEventListener("click", async () => {
-                markupClient = tr;
-                await EditClientData(client)
-                
+                markupClient = {
+                    edit: tr,
+                    next: tr.nextSibling
+                }
+                await EditClientData(client)   
          })
 
         return tr
@@ -531,7 +534,6 @@
             spanId
         }
      }
-
     const modalEditClient = createModalEditClient(document.getElementById('container'))
 
     async function EditClientData (client) {
@@ -577,7 +579,6 @@
                   }
               })
           }
-          console.log(markupClient)
           modalEditClient.modalEdit.headerCloseBtn.addEventListener('click', ()=>{
             removeContactsList();
             item = {}
@@ -587,11 +588,11 @@
             removeContactsList();
             item = {}
           })
-         modalEditClient.modalEditForm.saveBtn.addEventListener('click', async(e) => {
+         modalEditClient.modalEditForm.saveBtn.addEventListener('click', async(e) =>{
+            console.log(item, client)
              e.preventDefault();
-             markupClient.remove();
+             markupClient.edit.remove();
              modalEditClient.modalEditForm.saveBtn.setAttribute('data-dismiss', 'modal');
-             console.log(item.id)
              const responce = await fetch(`${URI}/${item.id}`, {
                  method: 'PATCH',
                  body: JSON.stringify(
@@ -608,8 +609,9 @@
                  },
             })
             const updateClient = await responce.json();
-            document.querySelector('.clients-tbody').append(createTableRow(updateClient));
-            console.log(updateClient)
+            document.querySelector('.clients-tbody').insertBefore(createTableRow(updateClient), markupClient.next);
+            removeContactsList();
+            item = {}
          })
      }
         
@@ -624,7 +626,7 @@
 
         container.prepend(appTitle);
         container.prepend(queryForm.formWrapper);
-        container.append(clientTable.tableWrapper)
+        container.append(clientTable.tableWrapper);
         container.append(addClientBtn.btnRow);
 
         modalDelClient.deleteBtn.addEventListener('click', async () => {
