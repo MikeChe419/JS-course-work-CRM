@@ -57,35 +57,10 @@
         return {
            tableHead
         }
-     }
-
-    //Создаем и возвращаем блок редактирования и удаления
-    function createEditWrapper() {
-        const wrapper = document.createElement('div');
-        wrapper.classList.add("table__btn-wrapper");
-        const editBtn = document.createElement('button');
-        const delBtn = document.createElement('button');
-        editBtn.classList.add('btn', 'btn-link', 'edit-client-btn');
-        editBtn.setAttribute('data-target', '#editModal');
-        editBtn.setAttribute('data-toggle', 'modal')
-        editBtn.textContent = 'Изменить';
-        delBtn.classList.add('btn', 'btn-link', 'del-client-btn');
-        delBtn.setAttribute('data-target', '#delModal');
-        delBtn.setAttribute('data-toggle', 'modal');
-        delBtn.textContent = 'Удалить';
-
-        wrapper.append(editBtn);
-        wrapper.append(delBtn);
-
-        return {
-            wrapper,
-            delBtn,
-            editBtn,
-        }
     }
 
     //Создаем контейнер тела таблицы
-     function createTableBody() {
+    function createTableBody() {
         const tableWrapper = document.createElement('div');
         const table = document.createElement('table');
         const tbody = document.createElement('tbody');
@@ -113,6 +88,31 @@
         return str.slice(11, 16);
     }
 
+    //Создаем и возвращаем блок редактирования и удаления
+    function createEditWrapper() {
+        const wrapper = document.createElement('div');
+        wrapper.classList.add("table__btn-wrapper");
+        const editBtn = document.createElement('button');
+        const delBtn = document.createElement('button');
+        editBtn.classList.add('btn', 'btn-link', 'edit-client-btn');
+        editBtn.setAttribute('data-target', '#editModal');
+        editBtn.setAttribute('data-toggle', 'modal')
+        editBtn.textContent = 'Изменить';
+        delBtn.classList.add('btn', 'btn-link', 'del-client-btn');
+        delBtn.setAttribute('data-target', '#delModal');
+        delBtn.setAttribute('data-toggle', 'modal');
+        delBtn.textContent = 'Удалить';
+
+        wrapper.append(editBtn);
+        wrapper.append(delBtn);
+
+        return {
+            wrapper,
+            delBtn,
+            editBtn,
+        }
+    }
+
     function createTableRow(client) {
         const tr = document.createElement('tr');
         const tdId = document.createElement('td');
@@ -130,15 +130,6 @@
         let contactList = {};
         const create = client.createdAt;
         const update = client.updatedAt;
-
-        if (typeof client.contacts !== 'undefined') {
-            contactList = client.contacts.map(item => {
-                const li = document.createElement('li');
-                li.textContent = item.value;
-                return li
-            });
-            contactList.forEach(item => contactsUl.append(item));
-        };
 
         tr.classList.add('row', 'client__row');
         tdId.classList.add('client__item-cell');
@@ -170,7 +161,6 @@
         tdCreateDate.append(createTime);
         tdUpdateDate.append(updateDay);
         tdUpdateDate.append(updateTime);
-        tdContacts.append(contactsUl);
         tr.append(tdId);
         tr.append(tdFullname);
         tr.append(tdCreateDate);
@@ -178,10 +168,58 @@
         tr.append(tdContacts);
         tr.append(tdActions);
 
+        if (typeof client.contacts !== 'undefined') {
+            const showAllContactsBtn = document.createElement('button')
+            contactList = client.contacts.map(item => {
+                const li = document.createElement('li');
+                const popup = document.createElement('div');
+                popup.classList.add('contact-popup');
+                popup.textContent = item.value;
+                popup.setAttribute('style', 'display: none');
+                li.append(popup);
+                li.classList.add('contact-item');
+                li.addEventListener('mouseover', () => popup.removeAttribute('style'));
+                li.addEventListener('mouseout', () => popup.setAttribute('style', 'display: none'));
+                const img = document.createElement('img');
+                img.setAttribute('style', 'display: block; margin: auto;')
+                li.append(img)
+                 switch (true) {
+                     case(item.type == 'phone'):
+                     img.setAttribute('src', '/images/phone.svg');
+                     break;
+                     case(item.type == 'mail'):
+                     img.setAttribute('src', '/images/mail.svg');
+                     break;
+                     case(item.type == 'fb'):
+                     img.setAttribute('src', '/images/fb.svg');
+                     break;
+                     case(item.type == 'vk'):
+                     img.setAttribute('src', '/images/Vk.svg');
+                     break;
+                     default:
+                     img.setAttribute('src', '/images/other.svg');
+                     break;
+                 }
+                return li
+            });
+            contactList.forEach(item => contactsUl.append(item))
+            const contactNodes = contactsUl.childNodes;
+            tdContacts.append(contactsUl);
+            if (contactNodes.length > 4) {
+                for (let i = 4; i < contactNodes.length; i++) contactNodes[i].setAttribute('style', 'display: none;')
+                showAllContactsBtn.classList.add('show-contacts-btn');
+                showAllContactsBtn.textContent = `+${contactNodes.length-4}`
+                tdContacts.appendChild(showAllContactsBtn);
+                showAllContactsBtn.addEventListener('click', () => {
+                    showAllContactsBtn.setAttribute('style', 'display: none;')
+                    contactNodes.forEach(elem => elem.removeAttribute('style'));
+                })
+            }
+            
+        };
          actions.delBtn.addEventListener("click", (e) => {
              objClient = client
              markupClient = tr
-
          })
         actions.editBtn.addEventListener("click", async () => {
                 markupClient = {
@@ -195,7 +233,7 @@
     }
 
     //Создаем фунцию поиска
-     function createSearhClients(obj) {
+     function createSearchClients(obj) {
         queryForm.form.addEventListener('submit', (e) => {
             e.preventDefault();
             let search = queryForm.input.value.split(' ');
@@ -435,11 +473,10 @@
             }))
             return contactArr
     }
-
     function removeContactsList() {
         document.querySelectorAll('.contact-group').forEach(item => item.remove());
     }
-     function clearModalForm() {
+    function clearModalForm() {
         removeContactsList()
         document.querySelectorAll('.modal-input').forEach(input => input.value = "")
     }
@@ -522,7 +559,7 @@
         }
     }
     // Создаем и возвращаем модальное окно изменения данных клиента
-     function createModalEditClient(container) {
+    function createModalEditClient(container) {
         const modal = document.createElement('div');
         const modalEdit = createModalTemp (modal, 'Изменить данные');
         const modalEditForm = createClientFormTemp(modalEdit.modalBody);
@@ -540,7 +577,7 @@
             modalEditForm,
             spanId
         }
-     }
+    }
 
     const modalEditClient = createModalEditClient(document.getElementById('container'))
     // Функция изменения данных клиента в модальном окне
@@ -621,9 +658,9 @@
             removeContactsList();
             item = {}
          })
-     }
+    }
 
-     async function getCLients () {
+    async function getCLients () {
         const response = await fetch(URI);
         const clientsList = await response.json();
         return clientsList
@@ -644,7 +681,7 @@
         container.append(addClientBtn.btnRow);
 
         clientsList.forEach(client => clientTable.tbody.append(createTableRow(client)))
-        createSearhClients(clientTable.tbody);
+        createSearchClients(clientTable.tbody);
         modalDelClient.deleteBtn.addEventListener('click', async () => {
             markupClient.remove()
             const response = await fetch(`${URI}/${objClient.id}`, {

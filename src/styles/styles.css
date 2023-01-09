@@ -27,10 +27,20 @@ table {
 
 .client-table {
     margin-bottom: 3rem;
+    min-width: 728px;
+}
+
+.client__row {
+    width: 100%;
+    justify-content: space-around;
+    margin-left: 0;
+    margin-right: 0;
+    padding: 10px;
+    border-bottom: 1px solid #C8C5D1;
 }
 
 td {
-  width: calc(100vw / 6 - 130px);
+  width: calc(100% / 6);
   padding-left: 10px;
   padding-right: 10px;
   font-weight: 400;
@@ -39,16 +49,46 @@ td {
   color: #B0B0B0;
 }
 
+#td-fullname, #sort-name {
+    max-width: 180px;
+}
+
+#td-create-date, #td-up-date, #sort-create-time, #sort-last-edits {
+    max-width: 120px;
+}
+
+#td-contacts {
+    max-width: 140px;
+    display: flex;
+}
+
+.show-contacts-btn {
+    margin: auto 0;
+    padding: 1px;
+    width: 16px;
+    height: 16px;
+    background-color: #FFF;
+    border: 1px solid #9873FF;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 8px;
+    line-height: 11px;
+}
+
 ul {
     list-style: none;
 }
 
 .clients {
     margin: 0;
+    width: 100%;
 }
  
 .head-row {
     padding-left: 20px;
+    margin: 0;
+    width: 100%;
+    justify-content: space-around;
 }
 .client-table {
     width: 100%;
@@ -97,8 +137,6 @@ ul {
     border: none;
 }
 
-
-
 .modal-header {
     position: relative;
     justify-content: left;
@@ -112,14 +150,6 @@ ul {
 .modal-footer {
     flex-direction: column;
     border: none
-}
-
-.client__row {
-    margin-left: 0;
-    margin-right: 0;
-    padding: 10px;
-    border-bottom: 1px solid #C8C5D1;
-    max-height: 60px;
 }
 
 tbody {
@@ -141,7 +171,7 @@ tbody {
     max-width: 70px;   
 }
 
-#ID {
+#ID, #td-id {
     max-width: 70px; 
 }
 .modal__contact-wrapper {
@@ -223,8 +253,30 @@ tbody {
 }
 
 .table_contacts-list {
-    margin: 0;
+    margin: auto 0;
     padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+}
+.contact-item {
+    position: relative;
+}
+
+.contact-popup {
+    position: absolute;
+    z-index: 20;
+    top: -30px;
+    left: -60px; 
+    font-weight: 700;
+    font-size: 12px;
+    line-height: 16px;
+    padding: 7px 14px;
+    color: #FFF;
+    background-color: #333333;
+}
+
+.contact-item:not(:last-child) {
+    margin-right: 7px;
 }
 
 .day {
