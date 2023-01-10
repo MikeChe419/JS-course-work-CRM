@@ -45,10 +45,10 @@
         let tableHead = document.getElementById('heading-table');
         let headRow =`<tbody>
             <tr class="row head-row">
-              <td id="ID">ID</td>
-              <td id="sort-name">Фамилия Имя Отчество</td>
-              <td id ="sort-create-time">Дата и время создания</td>
-              <td id ="sort-last-edits">Последние измения</td>
+              <td class="head-td" id="ID"><span>ID</span><i class="far fa-arrow-up"></i></td>
+              <td class="head-td" id="sort-name"><span>Фамилия Имя Отчество</span><i class="far fa-arrow-up"></i><span class ="full-name-span">А-Я</span></td>
+              <td class="head-td" id ="sort-create-time"><span>Дата и время создания</span><i class="far fa-arrow-up"></i></td>
+              <td class="head-td" id ="sort-last-edits"><span>Последние измения</span><i class="far fa-arrow-up"></i></td>
               <td>Контакты</td>
               <td>Действия</td>
               </tr>
@@ -172,16 +172,16 @@
             const showAllContactsBtn = document.createElement('button')
             contactList = client.contacts.map(item => {
                 const li = document.createElement('li');
-                const popup = document.createElement('div');
+                const popup = document.createElement('span');
                 popup.classList.add('contact-popup');
-                popup.textContent = item.value;
+                popup.textContent = `${item.type}:${item.value}`;
                 popup.setAttribute('style', 'display: none');
                 li.append(popup);
                 li.classList.add('contact-item');
                 li.addEventListener('mouseover', () => popup.removeAttribute('style'));
                 li.addEventListener('mouseout', () => popup.setAttribute('style', 'display: none'));
                 const img = document.createElement('img');
-                img.setAttribute('style', 'display: block; margin: auto;')
+                img.setAttribute('style', 'padding-bottom: 2px;')
                 li.append(img)
                  switch (true) {
                      case(item.type == 'phone'):
@@ -243,7 +243,6 @@
                 const response = await fetch(url);
                 let data = await response.json();
                 rows.forEach(el => el.remove());
-                console.log(data);
                 data.forEach(client => obj.append(createTableRow(client)));
             }, 500)
         })
@@ -271,7 +270,7 @@
     const addClientBtn = createAddButton();
 
     //Создаем шаблон модального окна с использованием bootstrap
-    function createModalTemp (container, title) {
+    function createModalTemp (container, title, closeBtnText) {
         const modalDialog = document.createElement('div');
         const modalContent = document.createElement('div');
         const modalHeader = document.createElement('div');
@@ -298,7 +297,7 @@
         closeBtn.setAttribute('data-dismiss', 'modal');
         closeBtn.setAttribute('aria-label', 'Close');
         closeBtn.classList.add('btn', 'bottom-close-btn');
-        closeBtn.textContent = 'Отмена'
+        closeBtn.textContent = closeBtnText
         modalHeader.append(modalTitle);
         modalHeader.append(headerCloseBtn);
         modalFooter.append(closeBtn);
@@ -419,11 +418,11 @@
         const saveBtn  = document.createElement('button');
 
         lastNameInput.classList.add('form-control', 'modal-input', 'mb-3');
-        lastNameInput.placeholder = 'Отчество*'
+        lastNameInput.placeholder = 'Отчество'
         nameInput.classList.add('form-control', 'modal-input', 'mb-3');
-        nameInput.placeholder = 'Имя *'
+        nameInput.placeholder = 'Имя*'
         sureNameInput.classList.add('form-control', 'modal-input', 'mb-3');
-        sureNameInput.placeholder = 'Фамилия';
+        sureNameInput.placeholder = 'Фамилия*';
         saveBtn.classList.add('btn', 'save-btn');
         saveBtn.textContent = 'Сохранить';
         saveBtn.setAttribute('type', 'submit');
@@ -470,8 +469,8 @@
             contactDataArr.forEach(input => contactArr.push({
                 type: input.id,
                 value: input.value
-            }))
-            return contactArr
+        }))
+        return contactArr
     }
     function removeContactsList() {
         document.querySelectorAll('.contact-group').forEach(item => item.remove());
@@ -483,7 +482,7 @@
     // Создаем и возвращаем модальное  окно добавления клиента
     function createModalAddClient(container) {
         const modalFade = document.createElement('div');
-        const modalAdd = createModalTemp (modalFade, 'Новый клиент');
+        const modalAdd = createModalTemp (modalFade, 'Новый клиент', 'Отмена');
         const modalForm =  createClientFormTemp(modalAdd.modalBody)
 
         modalFade.classList.add('modal', 'fade');
@@ -525,6 +524,7 @@
             });
             const client = await response.json();
             document.querySelector('.clients-tbody').append(createTableRow(client));
+            await getCLients();
             modalForm.nameInput.value = "";
             modalForm.sureNameInput.value = "";
             modalForm.lastNameInput.value= "";
@@ -534,7 +534,7 @@
     //Создаем и возвращаем модальное окно удаления клиента
     function createModalDelClient(container) {
         const modal = document.createElement('div');
-        const modalDel = createModalTemp(modal, 'Удалить клиента');
+        const modalDel = createModalTemp(modal, 'Удалить клиента', 'Отмена');
         const p = document.createElement('p');
         const deleteBtn = document.createElement('button');
 
@@ -561,7 +561,7 @@
     // Создаем и возвращаем модальное окно изменения данных клиента
     function createModalEditClient(container) {
         const modal = document.createElement('div');
-        const modalEdit = createModalTemp (modal, 'Изменить данные');
+        const modalEdit = createModalTemp (modal, 'Изменить данные', 'Удалить клиента');
         const modalEditForm = createClientFormTemp(modalEdit.modalBody);
         const spanId = document.createElement('span');
         modal.classList.add('modal', 'fade');
@@ -579,16 +579,21 @@
         }
     }
 
+    async function deleteRequest(client) {
+        const response = await fetch(`${URI}/${client.id}`, {
+            method: 'DELETE',
+      }); 
+    }
+
     const modalEditClient = createModalEditClient(document.getElementById('container'))
     // Функция изменения данных клиента в модальном окне
     async function EditClientData (client) {
         let response = await fetch(`${URI}/${client.id}`);
         let item = await response.json();
-        console.log(item);
         modalEditClient.spanId.textContent = `ID: ${item.id.slice(-6)}`;
         modalEditClient.modalEditForm.nameInput.value = item.name;
-        modalEditClient.modalEditForm.lastNameInput.value = item.surname;
-        modalEditClient.modalEditForm.sureNameInput.value = item.lastName;
+        modalEditClient.modalEditForm.lastNameInput.value = item.lastName;
+        modalEditClient.modalEditForm.sureNameInput.value = item.surname;
           if (client.contacts.length > 0) {
               client.contacts.forEach(el => {
                   let contactItem = createContactsItem(modalEditClient.modalEditForm.contactsList);
@@ -625,26 +630,27 @@
               })
           }
 
-          modalEditClient.modalEdit.headerCloseBtn.addEventListener('click', ()=>{
+        modalEditClient.modalEdit.headerCloseBtn.addEventListener('click', ()=>{
             removeContactsList();
             item = {}
-          })
-          modalEditClient.modalEdit.closeBtn.addEventListener('click', ()=>{
-            removeContactsList();
-            item = {}
-          })
+        })
+        modalEditClient.modalEdit.closeBtn.addEventListener('click', async() => {
+            markupClient.edit.remove()
+            await deleteRequest(item)
+        })
          modalEditClient.modalEditForm.saveBtn.addEventListener('click', async(e) => {
             console.log(item, client)
              e.preventDefault();
              markupClient.edit.remove();
              modalEditClient.modalEditForm.saveBtn.setAttribute('data-dismiss', 'modal');
+             console.log(modalEditClient.modalEditForm.nameInput.value.trim())
              const responce = await fetch(`${URI}/${item.id}`, {
                  method: 'PATCH',
                  body: JSON.stringify(
                      {
                          name: modalEditClient.modalEditForm.nameInput.value.trim(),
-                         lastName: modalEditClient.modalEditForm.sureNameInput.value.trim(),
-                         surname: modalEditClient.modalEditForm.lastNameInput.value.trim(),
+                         lastName: modalEditClient.modalEditForm.lastNameInput.value.trim(),
+                         surname: modalEditClient.modalEditForm.sureNameInput.value.trim(),
                          contacts: createContactsArray()
                      },
                  ),
@@ -666,27 +672,104 @@
         return clientsList
     }
 
+    function clearRows(/*elClick, array, tableBody*/) {
+        // elClick.addEventListener('click',() => {
+        const removeRows = document.querySelectorAll('.client__row');
+        removeRows.forEach(el => el.remove());
+    }
+
+    //Сортировка по ID
+    function sortID(array, tableBody) {
+        const ID = document.querySelector('#ID');
+        ID.addEventListener('click', ()=> {
+            clearRows()
+            let arrow =  ID.querySelector('.fa-transform')
+            if (arrow === null) {
+                array.sort((a, b) => b.id - a.id);
+            } else {
+                array.sort((a, b) => a.id - b.id);
+            }
+            ID.querySelector('.fa-arrow-up').classList.toggle('fa-transform');
+            array.forEach(client => tableBody.append(createTableRow(client)));
+        })
+        return array
+    }
+
+    //Сортировка по ФИО
+    function sortFullName(array, tableBody) {
+        const fullName = document.querySelector('#sort-name'); 
+        const  span = document.querySelector('.full-name-span')
+        fullName.addEventListener('click', () => {
+            clearRows()
+            let arrow = fullName.querySelector('.fa-transform')
+            if (arrow === null) {
+                array.sort ((a, b) => {
+                    if ((a.surname < b.surname) || ((a.surname == b.lastname)&& (a.name < b.name)) || (((a.surname == b.lastname) && (a.name == b.name)) && (a.lastName < b.lastName))) return -1;
+                    if ((a.surname < b.surname) || ((a.surname == b.lastname)&& (a.name < b.name)) || (((a.surname == b.lastname)&& (a.name == b.name)) && (a.lastName < b.lastName))) return 1; 
+                })
+                span.textContent = 'А-Я';
+            }
+            else {
+                array.sort ((a, b) => {
+                    if ((b.surname < a.surname) || ((b.surname == a.lastname)&& (b.name < a.name)) || (((b.surname == a.lastname)&& (b.name == a.name)) && (b.lastName < a.lastName))) return -1;
+                    if ((b.surname < a.surname) || ((b.surname == a.lastname)&& (b.name < a.name)) || (((b.surname == a.lastname)&& (b.name == a.name)) && (b.lastName < a.lastName))) return 1; 
+                })
+                span.textContent = 'Я-А';
+            }
+            fullName.querySelector('.fa-arrow-up').classList.toggle('fa-transform');
+            array.forEach(client => tableBody.append(createTableRow(client)));
+            
+        })
+    }
+
+    //сортировка по дате и времени создания/изменения
+    function sortTime (elClick, array, tableBody) {
+        elClick.addEventListener('click',() => {
+            clearRows()
+            let arrow = elClick.querySelector('.fa-transform')
+            if (elClick == document.querySelector('#sort-create-time')) {
+                if (arrow === null) {
+                    array.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                } else {
+                    array.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+                }
+            }
+            else if(elClick == document.querySelector('#sort-last-edits')) {
+                if (arrow === null) {
+                    array.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+                } else {
+                    array.sort((a, b) => new Date(a.updatedAt) - new Date(b.updatedAt));
+                }
+            }
+            elClick.querySelector('.fa-arrow-up').classList.toggle('fa-transform');
+            array.forEach(client => tableBody.append(createTableRow(client)));
+        }) 
+    }
+
     // Создаем функцию приложения
     async function createAppCRM (container, title="Клиенты") {
         const appTitle = createAppTitle(title);
-        const clientsList = await getCLients();
         const clientTable = createTableBody();
+        const clientsList = await getCLients();
         createModalAddClient(container);
         const modalDelClient = createModalDelClient(container);
         createTableHead();
+        console.log(clientsList)
 
         container.prepend(appTitle);
         container.prepend(queryForm.formWrapper);
         container.append(clientTable.tableWrapper);
         container.append(addClientBtn.btnRow);
-
         clientsList.forEach(client => clientTable.tbody.append(createTableRow(client)))
+        sortID(clientsList, clientTable.tbody);
+        sortFullName(clientsList, clientTable.tbody);
+        sortTime (document.querySelector('#sort-create-time'), clientsList, clientTable.tbody);
+        sortTime (document.querySelector('#sort-last-edits'), clientsList, clientTable.tbody);
         createSearchClients(clientTable.tbody);
+        
         modalDelClient.deleteBtn.addEventListener('click', async () => {
             markupClient.remove()
-            const response = await fetch(`${URI}/${objClient.id}`, {
-                 method: 'DELETE',
-            });
+            await deleteRequest(objClient)
         })
     }
 

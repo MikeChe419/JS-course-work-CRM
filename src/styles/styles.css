@@ -30,6 +30,30 @@ table {
     min-width: 728px;
 }
 
+.head-td {
+    display: flex;
+    justify-content: stretch; 
+    align-items: flex-start;
+}
+
+.fa-arrow-up, .fa-arrow-down {
+    padding-left: 2px;
+    color: #9873FF;
+}
+
+
+.full-name-span {
+    color: #9873FF;
+    padding-left: 2px;
+    font-weight: 600;
+    font-size: 10px;
+    line-height: 14px;
+}
+
+.fa-transform {
+    transform: rotate(0.5turn);
+}
+
 .client__row {
     width: 100%;
     justify-content: space-around;
@@ -49,16 +73,22 @@ td {
   color: #B0B0B0;
 }
 
-#td-fullname, #sort-name {
-    max-width: 180px;
+#td-fullname {
+    max-width: 190px;
+}
+
+#sort-name {
+    padding: 0;
+    max-width: 190px;
 }
 
 #td-create-date, #td-up-date, #sort-create-time, #sort-last-edits {
     max-width: 120px;
+    display: flex;
 }
 
 #td-contacts {
-    max-width: 140px;
+    width: 140px;
     display: flex;
 }
 
@@ -118,8 +148,19 @@ ul {
 }
 
 .modal-input {
-  border: none;
-  border-bottom: 1px solid #C8C5D1;  
+    width: calc(100% - 60px);
+    border: none;
+    border-radius: 0;
+    border-bottom: 1px solid #C8C5D1;  
+}
+
+.bottom-close-btn
+
+.modal-input::placeholder {
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 19px;
+    color: #B0B0B0;
 }
 
 .header__close-btn {
@@ -127,8 +168,15 @@ ul {
     right: 21px;
 }
 
+.header__close-btn:focus {
+    outline: none;
+}
+
 .bottom-close-btn {
     border: none;
+    color: #333333;
+    padding: 0;
+    border-bottom: 1px solid #333333;
 }
 
 .save-btn {
@@ -213,13 +261,27 @@ tbody {
     height: 35px;
 }
 
+.form-control:focus {   
+    border-bottom: 1px solid #c8c5d1;
+    box-shadow: none;
+}
+
+
 .contact-form {
     border-radius: 0;
     border: 1px solid #C8C5D1;
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 19px;
+    color: #333333;
+    background-color: #FFF
+
 }
 
 .contact-select {
     background: #E7E5EB; 
+    border: 1px solid #C8C5D1;
+
 }
 
 .contact__cleare-btn-span {
@@ -260,12 +322,14 @@ tbody {
 }
 .contact-item {
     position: relative;
+    height: 20px;
+    
 }
 
 .contact-popup {
     position: absolute;
     z-index: 20;
-    top: -30px;
+    top: -40px;
     left: -60px; 
     font-weight: 700;
     font-size: 12px;
@@ -302,7 +366,9 @@ tbody {
     font-size: 14px;
     line-height: 19px;
     color: #333333;
+    padding: 0;
     padding-left: 15px;
+    padding-right: 15px;
     background-repeat: no-repeat;
     background-size: 12px 12px;
     background-position: left center;
@@ -367,9 +433,39 @@ tbody {
     padding-left: 130px;
 }
 
+.contact-select {
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 16px;
+    color: #333333;
+    border: 1px solid #C8C5D1;
+}
+
+.contact-select:focus {
+    color: #333;
+    border: 1px solid #C8C5D1;
+    background-color: #E7E5EB;
+}
+
+.contact-input {
+
+}
+
+@media (max-width: 998px) {
+    .table__btn-wrapper {
+        flex-direction: column;
+    }
+
+    #td-create-date, #td-up-date {
+        flex-direction: column;
+     }
+}
+
 @media (min-width: 576px) {
     .modal-dialog {
         max-width: 450px;
         margin: 1.7rem auto;
     }
+
+   
 }
