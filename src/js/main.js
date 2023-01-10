@@ -579,6 +579,12 @@
         }
     }
 
+    async function getCLients() {
+        const response = await fetch(URI);
+        const clientsList = await response.json();
+        return clientsList
+    }
+
     async function deleteRequest(client) {
         const response = await fetch(`${URI}/${client.id}`, {
             method: 'DELETE',
@@ -666,86 +672,63 @@
          })
     }
 
-    async function getCLients () {
-        const response = await fetch(URI);
-        const clientsList = await response.json();
-        return clientsList
-    }
-
-    function clearRows(/*elClick, array, tableBody*/) {
-        // elClick.addEventListener('click',() => {
-        const removeRows = document.querySelectorAll('.client__row');
-        removeRows.forEach(el => el.remove());
+    //Вызов функции сортировок 
+    function  callSort(elClick, array, tableBody, sort) {
+        elClick.addEventListener('click', () => {
+            let arrow =  elClick.querySelector('.fa-transform')
+            const removeRows = document.querySelectorAll('.client__row');
+            removeRows.forEach(el => el.remove());
+            sort(array, arrow);
+            elClick.querySelector('.fa-arrow-up').classList.toggle('fa-transform');
+            array.forEach(client => tableBody.append(createTableRow(client)));
+        })
     }
 
     //Сортировка по ID
-    function sortID(array, tableBody) {
-        const ID = document.querySelector('#ID');
-        ID.addEventListener('click', ()=> {
-            clearRows()
-            let arrow =  ID.querySelector('.fa-transform')
-            if (arrow === null) {
-                array.sort((a, b) => b.id - a.id);
-            } else {
-                array.sort((a, b) => a.id - b.id);
-            }
-            ID.querySelector('.fa-arrow-up').classList.toggle('fa-transform');
-            array.forEach(client => tableBody.append(createTableRow(client)));
-        })
-        return array
+    function sortID(array, arrow) {
+        if (arrow === null) {
+            array.sort((a, b) => b.id - a.id);
+        } else {
+            array.sort((a, b) => a.id - b.id);
+        }
     }
 
     //Сортировка по ФИО
-    function sortFullName(array, tableBody) {
-        const fullName = document.querySelector('#sort-name'); 
+     function sortFullName(array, arrow) {
         const  span = document.querySelector('.full-name-span')
-        fullName.addEventListener('click', () => {
-            clearRows()
-            let arrow = fullName.querySelector('.fa-transform')
-            if (arrow === null) {
-                array.sort ((a, b) => {
-                    if ((a.surname < b.surname) || ((a.surname == b.lastname)&& (a.name < b.name)) || (((a.surname == b.lastname) && (a.name == b.name)) && (a.lastName < b.lastName))) return -1;
-                    if ((a.surname < b.surname) || ((a.surname == b.lastname)&& (a.name < b.name)) || (((a.surname == b.lastname)&& (a.name == b.name)) && (a.lastName < b.lastName))) return 1; 
-                })
-                span.textContent = 'А-Я';
-            }
-            else {
-                array.sort ((a, b) => {
-                    if ((b.surname < a.surname) || ((b.surname == a.lastname)&& (b.name < a.name)) || (((b.surname == a.lastname)&& (b.name == a.name)) && (b.lastName < a.lastName))) return -1;
-                    if ((b.surname < a.surname) || ((b.surname == a.lastname)&& (b.name < a.name)) || (((b.surname == a.lastname)&& (b.name == a.name)) && (b.lastName < a.lastName))) return 1; 
-                })
-                span.textContent = 'Я-А';
-            }
-            fullName.querySelector('.fa-arrow-up').classList.toggle('fa-transform');
-            array.forEach(client => tableBody.append(createTableRow(client)));
-            
-        })
+        if (arrow === null) {
+            array.sort ((a, b) => {
+                if ((a.surname < b.surname) || ((a.surname == b.lastname)&& (a.name < b.name)) || (((a.surname == b.lastname) && (a.name == b.name)) && (a.lastName < b.lastName))) return -1;
+                if ((a.surname < b.surname) || ((a.surname == b.lastname)&& (a.name < b.name)) || (((a.surname == b.lastname)&& (a.name == b.name)) && (a.lastName < b.lastName))) return 1; 
+            })
+            span.textContent = 'А-Я';
+        }
+        else {
+            array.sort ((a, b) => {
+                if ((b.surname < a.surname) || ((b.surname == a.lastname)&& (b.name < a.name)) || (((b.surname == a.lastname)&& (b.name == a.name)) && (b.lastName < a.lastName))) return -1;
+                if ((b.surname < a.surname) || ((b.surname == a.lastname)&& (b.name < a.name)) || (((b.surname == a.lastname)&& (b.name == a.name)) && (b.lastName < a.lastName))) return 1; 
+            })
+            span.textContent = 'Я-А';
+        }
+     }
+
+    //сортировки по дате и времени создания/изменения
+    function sortCreateTime (array, arrow) {
+        if (arrow === null) {
+            array.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        } else {
+            array.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+        }
     }
 
-    //сортировка по дате и времени создания/изменения
-    function sortTime (elClick, array, tableBody) {
-        elClick.addEventListener('click',() => {
-            clearRows()
-            let arrow = elClick.querySelector('.fa-transform')
-            if (elClick == document.querySelector('#sort-create-time')) {
-                if (arrow === null) {
-                    array.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-                } else {
-                    array.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-                }
-            }
-            else if(elClick == document.querySelector('#sort-last-edits')) {
-                if (arrow === null) {
-                    array.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
-                } else {
-                    array.sort((a, b) => new Date(a.updatedAt) - new Date(b.updatedAt));
-                }
-            }
-            elClick.querySelector('.fa-arrow-up').classList.toggle('fa-transform');
-            array.forEach(client => tableBody.append(createTableRow(client)));
-        }) 
+    function sortUpdateTime (array, arrow) {
+        if (arrow === null) {
+            array.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+        } else {
+            array.sort((a, b) => new Date(a.updatedAt) - new Date(b.updatedAt));
+        }
     }
-
+         
     // Создаем функцию приложения
     async function createAppCRM (container, title="Клиенты") {
         const appTitle = createAppTitle(title);
@@ -760,11 +743,11 @@
         container.prepend(queryForm.formWrapper);
         container.append(clientTable.tableWrapper);
         container.append(addClientBtn.btnRow);
-        clientsList.forEach(client => clientTable.tbody.append(createTableRow(client)))
-        sortID(clientsList, clientTable.tbody);
-        sortFullName(clientsList, clientTable.tbody);
-        sortTime (document.querySelector('#sort-create-time'), clientsList, clientTable.tbody);
-        sortTime (document.querySelector('#sort-last-edits'), clientsList, clientTable.tbody);
+        clientsList.forEach(client => clientTable.tbody.append(createTableRow(client)));
+        callSort(document.querySelector('#ID'), clientsList, clientTable.tbody, sortID);
+        callSort(document.querySelector('#sort-name'), clientsList, clientTable.tbody, sortFullName)
+        callSort(document.querySelector('#sort-create-time'), clientsList, clientTable.tbody, sortCreateTime);
+        callSort(document.querySelector('#sort-last-edits'), clientsList, clientTable.tbody, sortUpdateTime );
         createSearchClients(clientTable.tbody);
         
         modalDelClient.deleteBtn.addEventListener('click', async () => {
