@@ -432,7 +432,6 @@
         form.setAttribute('style', 'display: flex; flex-direction: column; align-items: center');
         contactWrapper.classList.add('mb-3', 'modal__contact-wrapper');
         contactsList.classList.add('list-group', 'contacts-list');
-        // saveBtn.setAttribute('data-dismiss', 'modal');
 
         contactWrapper.append(contactsList);
         contactWrapper.append(addContacts);
@@ -506,31 +505,37 @@
             e.preventDefault();
             if (!modalForm.nameInput.value || !modalForm.sureNameInput.value) return;
             modalForm.saveBtn.setAttribute('data-dismiss', 'modal');
-
-            const response = await fetch(URI, {
-                method: 'POST',
-                body: JSON.stringify(
+            try {
+                const response = await fetch(URI, {
+                    method: 'POST',
+                    body: JSON.stringify(
+                        {
+                            name: modalForm.nameInput.value.trim(),
+                            lastName: modalForm.lastNameInput.value.trim(),
+                            surname: modalForm.sureNameInput.value.trim(),
+                            contacts: createContactsArray(),
+                        },
+                    ),
+                    headers:
                     {
-                        name: modalForm.nameInput.value.trim(),
-                        lastName: modalForm.lastNameInput.value.trim(),
-                        surname: modalForm.sureNameInput.value.trim(),
-                        contacts: createContactsArray(),
+                        'Content-Type': 'application/json',
                     },
-                ),
-                headers:
-                {
-                    'Content-Type': 'application/json',
-                },
-            });
-            const client = await response.json();
-            document.querySelector('.clients-tbody').append(createTableRow(client));
-            await getCLients();
+                });
+                const client = await response.json();
+                document.querySelector('.clients-tbody').append(createTableRow(client));
+                await getCLients();
+            }
+            catch (error) {
+                console.log(error)
+            }
+
             modalForm.nameInput.value = "";
             modalForm.sureNameInput.value = "";
             modalForm.lastNameInput.value= "";
             removeContactsList();
         });
     }
+
     //Создаем и возвращаем модальное окно удаления клиента
     function createModalDelClient(container) {
         const modal = document.createElement('div');
@@ -594,82 +599,96 @@
     const modalEditClient = createModalEditClient(document.getElementById('container'))
     // Функция изменения данных клиента в модальном окне
     async function EditClientData (client) {
-        let response = await fetch(`${URI}/${client.id}`);
-        let item = await response.json();
-        modalEditClient.spanId.textContent = `ID: ${item.id.slice(-6)}`;
-        modalEditClient.modalEditForm.nameInput.value = item.name;
-        modalEditClient.modalEditForm.lastNameInput.value = item.lastName;
-        modalEditClient.modalEditForm.sureNameInput.value = item.surname;
-          if (client.contacts.length > 0) {
-              client.contacts.forEach(el => {
-                  let contactItem = createContactsItem(modalEditClient.modalEditForm.contactsList);
-                  contactItem.contactInput.value = el.value;
-                  switch (el.type) {
-                      case('phone'):
-                          contactItem.contactSelect.value = 'phone'
-                      break;
-                      case('mail'):
-                          contactItem.contactSelect.value = 'mail';
-                          contactItem.contactSelect.id = 'mail-select';
-                          contactItem.contactInput.type = 'email';
-                          contactItem.contactInput.id = 'mail';
-                      break;
-                      case('fb'):
-                          contactItem.contactSelect.value = 'fb';
-                          contactItem.contactSelect.id = 'fb-select';
-                          contactItem.contactInput.type = 'text';
-                          contactItem.contactInput.id = 'fb';
-                      break;
-                      case('vk'):
-                          contactItem.contactSelect.value = 'vk';
-                          contactItem.contactSelect.id = 'vk-select';
-                          contactItem.contactInput.type = 'text';
-                          contactItem.contactInput.id = 'vk';
-                      break;
-                      case('other'):
-                          contactItem.contactSelect.value = 'other';
-                          contactItem.contactSelect.id = 'other-select';
-                          contactItem.contactInput.type = 'text';
-                          contactItem.contactInput.id = 'other';
-                      break;
-                  }
-              })
-          }
+        let item
+        try {
+            let response = await fetch(`${URI}/${client.id}`);
+            item = await response.json();
+            modalEditClient.spanId.textContent = `ID: ${item.id.slice(-6)}`;
+            modalEditClient.modalEditForm.nameInput.value = item.name;
+            modalEditClient.modalEditForm.lastNameInput.value = item.lastName;
+            modalEditClient.modalEditForm.sureNameInput.value = item.surname;
+            if (item.contacts.length > 0) {
+                item.contacts.forEach(el => {
+                    let contactItem = createContactsItem(modalEditClient.modalEditForm.contactsList);
+                    contactItem.contactInput.value = el.value;
+                    switch (el.type) {
+                        case('phone'):
+                            contactItem.contactSelect.value = 'phone'
+                        break;
+                        case('mail'):
+                            contactItem.contactSelect.value = 'mail';
+                            contactItem.contactSelect.id = 'mail-select';
+                            contactItem.contactInput.type = 'email';
+                            contactItem.contactInput.id = 'mail';
+                        break;
+                        case('fb'):
+                            contactItem.contactSelect.value = 'fb';
+                            contactItem.contactSelect.id = 'fb-select';
+                            contactItem.contactInput.type = 'text';
+                            contactItem.contactInput.id = 'fb';
+                        break;
+                        case('vk'):
+                            contactItem.contactSelect.value = 'vk';
+                            contactItem.contactSelect.id = 'vk-select';
+                            contactItem.contactInput.type = 'text';
+                            contactItem.contactInput.id = 'vk';
+                        break;
+                        case('other'):
+                            contactItem.contactSelect.value = 'other';
+                            contactItem.contactSelect.id = 'other-select';
+                            contactItem.contactInput.type = 'text';
+                            contactItem.contactInput.id = 'other';
+                        break;
+                    }
+                })
+            }
+        }
+        catch (error) {
+            console.log(error)
+        }    
 
         modalEditClient.modalEdit.headerCloseBtn.addEventListener('click', ()=>{
             removeContactsList();
-            item = {}
+            item = null;
         })
         modalEditClient.modalEdit.closeBtn.addEventListener('click', async() => {
             markupClient.edit.remove()
             await deleteRequest(item)
         })
-         modalEditClient.modalEditForm.saveBtn.addEventListener('click', async(e) => {
-            console.log(item, client)
-             e.preventDefault();
-             markupClient.edit.remove();
-             modalEditClient.modalEditForm.saveBtn.setAttribute('data-dismiss', 'modal');
-             console.log(modalEditClient.modalEditForm.nameInput.value.trim())
-             const responce = await fetch(`${URI}/${item.id}`, {
-                 method: 'PATCH',
-                 body: JSON.stringify(
-                     {
-                         name: modalEditClient.modalEditForm.nameInput.value.trim(),
-                         lastName: modalEditClient.modalEditForm.lastNameInput.value.trim(),
-                         surname: modalEditClient.modalEditForm.sureNameInput.value.trim(),
-                         contacts: createContactsArray()
-                     },
-                 ),
-                 headers:
-                 {
-                     'Content-Type': 'application/json',
-                 },
+        modalEditClient.modalEditForm.saveBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            fetch(`${URI}/${item.id}`, {
+                method: 'PATCH',
+                body: JSON.stringify(
+                    {
+                        name: modalEditClient.modalEditForm.nameInput.value.trim(),
+                        lastName: modalEditClient.modalEditForm.lastNameInput.value.trim(),
+                        surname: modalEditClient.modalEditForm.sureNameInput.value.trim(),
+                        contacts: createContactsArray()
+                    },
+                ),
+                headers:
+                {
+                    'Content-Type': 'application/json',
+                },
             })
-            const updateClient = await responce.json();
-            document.querySelector('.clients-tbody').insertBefore(createTableRow(updateClient), markupClient.next);
-            removeContactsList();
-            item = {}
-         })
+            .then((response) => {
+                // modalEditClient.modalEditForm.saveBtn.setAttribute('data-dismiss', 'modal');
+                const updateClient =  response.json();
+                
+                window.location.reload();
+            })
+            .catch((error) => {
+                const errorWrapper = document.createElement('div');
+                errorWrapper.classList.add('modal__error-wrapper')
+                errorWrapper.textContent = 'Ошибка: новая модель организационной деятельности предполагает независимые способы реализации поставленных обществом задач!'
+                const contactWrapper = document.querySelector('.modal__contact-wrapper');
+                document.querySelector('.modal-form').insertBefore(errorWrapper, contactWrapper.nextElementSibling)
+                contactWrapper.nextElementSibling;
+                console.log(error)
+            })
+        item = null
+        })
     }
 
     //Вызов функции сортировок 
@@ -720,7 +739,6 @@
             array.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
         }
     }
-
     function sortUpdateTime (array, arrow) {
         if (arrow === null) {
             array.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
@@ -737,8 +755,7 @@
         createModalAddClient(container);
         const modalDelClient = createModalDelClient(container);
         createTableHead();
-        console.log(clientsList)
-
+    
         container.prepend(appTitle);
         container.prepend(queryForm.formWrapper);
         container.append(clientTable.tableWrapper);

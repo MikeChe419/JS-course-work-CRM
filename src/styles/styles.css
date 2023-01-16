@@ -429,6 +429,16 @@ tbody {
     color: #B0B0B0;
 }
 
+.modal__error-wrapper {
+    margin-bottom: 9px;
+    max-width: 255px;
+    text-align: center;
+    font-weight: 400;
+    font-size: 10px;
+    line-height: 14px;
+    color: #F06A4D;
+}
+
 .modal__del-title {
     padding-left: 130px;
 }
